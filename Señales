@@ -1,0 +1,122 @@
+//50%
+#include <xc.h>
+#define _XTAL_FREQ 4000000
+
+void conf_ptos(void);
+void conf_timer(void);
+
+
+int cont=1;
+
+void conf_ptos(void){
+    ADCON1bits.PCFG=1111;
+    TRISB=0;
+    PORTB=0;  
+}
+
+
+ 
+void conf_timer(void){
+   INTCONbits.GIE=0;
+   //TIMER 0
+   T0CONbits.T0CS=0;
+   T0CONbits.PSA=0;
+   T0CONbits.T0PS=111;
+   T0CONbits.T08BIT=1;
+   T0CONbits.TMR0ON=1; 
+   //INTERRUPCIONES 
+   INTCONbits.TMR0IE=1;
+   INTCONbits.TMR0IF=0;
+   
+   INTCONbits.PEIE=1;
+   INTCONbits.GIE=1; 
+}
+
+
+void main(void) {
+    conf_ptos();
+    conf_timer();
+    
+    TMR0=53036;
+    
+   
+    while(1){
+        
+       if(cont==1)PORTBbits.RB3=1;
+       
+    }
+    return;
+
+}
+void __interrupt()senal(){
+    if(INTCONbits.TMR0IF==1){
+        PORTBbits.RB3=0;
+        cont++;
+        if(cont==3)cont=1;
+    }
+     TMR0=53036;
+    INTCONbits.TMR0IF=0;
+    
+    
+//80%
+#include <xc.h>
+#define _XTAL_FREQ 4000000
+
+
+void conf_ptos(void);
+void conf_timer(void);
+
+
+int cont=1;
+
+void conf_ptos(void){
+    ADCON1bits.PCFG=1111;
+    TRISB=0;
+    PORTB=0;  
+}
+
+
+ 
+void conf_timer(void){
+   INTCONbits.GIE=0;
+   //TIMER1
+   T1CONbits.RD16=1;
+   T1CONbits.T1CKPS=01;
+   T1CONbits.TMR1CS=0;
+   T1CONbits.TMR1ON=1; 
+   //INTERRUPCIONES 
+   PIE1bits.TMR1IE=1;
+   PIR1bits.TMR1IF=1;
+   
+   INTCONbits.PEIE=1;
+   INTCONbits.GIE=1; 
+
+}
+
+void main(void) {
+    conf_ptos();
+    conf_timer();
+    
+    TMR1=25536;
+    
+   
+    while(1){
+        
+       if(cont==1)PORTBbits.RB4=1;
+       
+    }
+    return;
+
+}
+void __interrupt()senal(){
+
+       PORTBbits.RB4=0;
+       TMR1=55536;
+       cont++;
+       
+       if(cont==4){
+           cont=1;
+       TMR1=25536;}
+     
+    PIR1bits.TMR1IF=0;
+    }
