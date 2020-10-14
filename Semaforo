@@ -1,0 +1,119 @@
+#include <xc.h>
+#define _XTAL_FREQ 4000000
+
+void conf_ptos(void);
+void conf_timer(void);
+
+
+int cont;
+
+void conf_ptos(void){
+    ADCON1bits.PCFG=1111;
+    TRISA=0;
+    PORTA=0;
+    TRISB=1;
+    TRISC=0;
+    PORTC=0;
+    TRISD=0;
+    PORTD=0;
+}
+
+
+ 
+void conf_timer(void){
+   INTCONbits.GIE=0;
+   //TIMER 0
+   T0CONbits.T0CS=0;
+   T0CONbits.PSA=0;
+   T0CONbits.T0PS=111;
+   T0CONbits.T08BIT=1;
+   T0CONbits.TMR0ON=0;
+   //TIMER1
+   T1CONbits.RD16=1;
+   T1CONbits.T1CKPS=11;
+   T1CONbits.TMR1CS=0;
+   T1CONbits.TMR1ON=1;     
+   //INTERRUPCIONES 
+   INTCONbits.TMR0IE=1;
+   INTCONbits.TMR0IF=0;
+   
+   PIE1bits.TMR1IE=1;
+   PIR1bits.TMR1IF=0;
+   
+   PIE2bits.TMR3IE=1;
+   PIR2bits.TMR3IF=0;
+   
+  
+   INTCON3bits.INT2IE=1;
+   INTCON3bits.INT2IF=0;
+   INTCON3bits.INT2IP=0;
+   INTCON2bits.INTEDG2=1;
+   
+   INTCONbits.PEIE=1;
+   INTCONbits.GIE=1; 
+}
+
+
+void main(void) {
+    conf_ptos();
+    conf_timer();
+    
+    TMR0=6942;
+    TMR1=3036;
+    
+    while(1){
+       PORTA=TMR0; 
+      if(cont%2!=0){
+            PORTDbits.RD5=1;
+            PORTDbits.RD7=1;
+            PORTDbits.RD4=0;
+            PORTDbits.RD6=0;
+        }
+        else{
+            
+            PORTDbits.RD5=0;
+            PORTDbits.RD7=0;
+            PORTDbits.RD4=1;
+            PORTDbits.RD6=1;
+        }
+           
+    }
+    return;
+
+}
+
+void __interrupt(high_priority)minutos(){
+    if (PORTBbits.RB2==1){
+   
+     T0CONbits.TMR0ON=1;  
+      if(INTCONbits.TMR0IF==1){
+         T0CONbits.TMR0ON=0;
+        INTCONbits.TMR0IF=0;  
+    }
+     PORTDbits.RD5=1;
+     PORTDbits.RD7=1;
+     PORTDbits.RD4=0;
+     PORTDbits.RD6=0;
+     __delay_ms(2000);
+     
+     INTCON3bits.INT2IF=0;
+     }
+    
+    else {
+        TMR1=3036;
+         PIR1bits.TMR1IF=0;
+         T3CONbits.RD16=1;
+         T3CONbits.T3CKPS=11;
+         T3CONbits.TMR3CS=0;
+         T3CONbits.TMR3ON=1;
+         TMR3=3036;
+         if(PIR2bits.TMR3IF==1){
+             TMR3=3036;
+             PIR2bits.TMR3IF=0;
+             cont++;
+         }
+          
+     
+         }
+   
+    }   
