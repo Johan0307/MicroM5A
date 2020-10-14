@@ -1,0 +1,201 @@
+#include <xc.h>
+
+#define _XTAL_FREQ 4000000
+
+#pragma config PLLDIV = 1 
+#pragma config FOSC = XT_XT 
+
+
+void temperatura (long c);
+void mantenimiento ();
+void configuracion();
+
+void main(void) {
+   
+    configuracion();
+    
+    while(1){
+        
+    
+    
+    PORTB=0b11111101;
+    PORTB=0b11111011; 
+    PORTB=0b11110111; 
+    
+    ADCON0bits.GO_DONE=1;    
+    PORTCbits.RC5=1; 
+    PORTCbits.RC6=0; 
+    
+    while(ADCON0bits.GODONE==1){
+      
+        int reg;
+        reg=ADRESH<<8;
+        reg=reg+ADRESL;
+        temperatura(reg);
+    }
+    }
+    return;
+}
+
+int __interrupt() matriz(void){
+
+    if(INTCONbits.RBIF==1) {
+        
+    PORTD=0;
+    
+    int valor,tmp;
+    char let;
+    int ent1 ,dec1;
+    float mul1;
+    
+    if(PORTBbits.RB1==0&&PORTBbits.RB7==0)valor=1;
+    if(PORTBbits.RB1==0&&PORTBbits.RB6==0)valor=4;
+    if(PORTBbits.RB1==0&&PORTBbits.RB5==0)valor=7;
+    if(PORTBbits.RB1==0&&PORTBbits.RB4==0)let='*';
+    
+    if(PORTBbits.RB2==0&&PORTBbits.RB7==0)valor=2;
+    if(PORTBbits.RB2==0&&PORTBbits.RB6==0)valor=5;
+    if(PORTBbits.RB2==0&&PORTBbits.RB5==0)valor=8;
+    if(PORTBbits.RB2==0&&PORTBbits.RB4==0)valor=0;
+     
+    if(PORTBbits.RB3==0&&PORTBbits.RB7==0)valor=3;
+    if(PORTBbits.RB3==0&&PORTBbits.RB6==0)valor=6;
+    if(PORTBbits.RB3==0&&PORTBbits.RB5==0)valor=9;
+    if(PORTBbits.RB3==0&&PORTBbits.RB4==0)let='#';
+    
+    
+    
+    if(let!='*'){
+        
+    tmp=(tmp*10)+valor;
+      if(tmp>99) tmp=0;
+          
+        mul1=tmp*0.1;
+        ent1=mul1;
+        dec1=(mul1-ent1)*10;
+        PORTA=ent1<<1;
+        PORTD=dec1;      
+    }
+    else {
+        
+        float mul2;
+        int ent2,dec2;
+         
+        for(int x=tmp;x>=0;x--){
+            
+          PORTB=0b11110111;
+          PORTCbits.RC5=0;  
+          PORTCbits.RC6=1; 
+            
+           if(PORTBbits.RB3==0&&PORTBbits.RB4==0){
+               
+               break; 
+            }
+            else if(INTCONbits.INT0IF==1){
+     
+                 mantenimiento();
+                
+                 INTCONbits.INT0IF=0;
+                 
+                 break;
+             }
+            
+            else{
+                
+            mul2=x*0.1;
+            ent2=mul2;
+            dec2=(mul2-ent2)*10;
+            PORTA=ent2<<1;
+            PORTD=dec2;
+            __delay_ms(1000);
+            
+            } 
+        }
+        
+       tmp=0;
+       valor=0;
+       let=0;
+    }
+   
+    while(PORTBbits.RB7==0||PORTBbits.RB6==0||PORTBbits.RB5==0||PORTBbits.RB4==0);
+         INTCONbits.RBIF=0;
+   }
+    else if(INTCONbits.INT0IF==1){
+     
+            mantenimiento();
+                
+            INTCONbits.INT0IF=0;
+                 
+            
+            
+     }
+     
+}     
+  
+void temperatura (long c){
+    
+ADCON0bits.CHS=0b0000;
+
+   long temp;
+ 
+   temp= c*0.48875;
+  
+   if(temp>=60) PORTCbits.RC7=1;
+   else  PORTCbits.RC7=0; 
+  
+}    
+
+void mantenimiento (){
+    
+    PORTC=0;
+    PORTA=0;
+    PORTD=0;
+    
+  for(int i=1;i<=9;i++){
+        PORTA=i<<1;
+        PORTD=i;
+        __delay_ms(1000);
+  }
+     for(int j=0;j<3;j++){
+         
+         PORTC=0b11111111;
+         __delay_ms(1000);
+         PORTC=0b00000000;
+         __delay_ms(1000);
+     }
+    
+    PORTA=0;
+    PORTD=0;
+    
+}
+
+void configuracion(){
+    
+    TRISA=0b00000001;
+    PORTA=0;
+    TRISB=0b11110001;
+    PORTB=0;
+    TRISC=0;
+    PORTC=0;
+    TRISD=0;
+    PORTD=0;
+    TRISE=0;
+    PORTD=0;
+    
+    
+    ADCON1bits.VCFG=0;
+    ADCON1bits.PCFG=1110;
+   
+    ADCON2bits.ACQT=2;
+    ADCON2bits.ADCS=4;
+    ADCON2bits.ADFM=1;        
+    ADCON0bits.ADON=1;
+    
+    INTCON2bits.RBPU=0;
+    INTCONbits.INT0IE=1;
+    INTCONbits.INT0IF=0;
+    INTCON2bits.INTEDG0=0;
+    INTCONbits.GIE=1;
+    INTCONbits.RBIE=1;
+    INTCONbits.RBIF=0;
+    }
