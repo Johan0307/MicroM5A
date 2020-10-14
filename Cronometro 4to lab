@@ -1,0 +1,95 @@
+void conf_ptos(void);
+void conf_timer(void);
+
+
+int deseg,seg,min;
+
+
+
+void conf_ptos(void){
+    ADCON1bits.PCFG=1111;
+    TRISD=0;
+    TRISC=0;
+    PORTC=0;
+    TRISD=0;
+    PORTD=0;
+}
+
+void conf_timer(void){
+   INTCONbits.GIE=0;
+   //TIMER 0
+   T0CONbits.T0CS=0;
+   T0CONbits.PSA=0;
+   T0CONbits.T0PS=111;
+   T0CONbits.T08BIT=1;
+   T0CONbits.TMR0ON=1;
+   
+   //INTERRUPCIONES 
+   INTCONbits.TMR0IE=1;
+   INTCONbits.TMR0IF=0;
+   INTCONbits.PEIE=1;
+   INTCONbits.GIE=1; 
+}
+
+
+void main(void) {
+    conf_ptos();
+    conf_timer();
+    
+    TMR0=65496;
+   
+    int res,mod;
+    
+    while(1){
+        
+        res=deseg/10;
+        mod=deseg%10;
+        PORTC=0;
+        PORTD=res;
+        PORTCbits.RC4=1;
+        PORTCbits.RC6=1;
+        __delay_ms(5);
+        
+        PORTC=0;
+        PORTD=mod;
+        PORTCbits.RC5=1;
+        __delay_ms(5);   
+        
+        res=seg/10;
+        mod=seg%10;
+        
+        PORTC=0;
+        PORTD=res;
+        PORTCbits.RC1=1;
+        PORTCbits.RC6=1;
+        __delay_ms(5);
+        
+        PORTC=0;
+        PORTD=mod;
+        PORTCbits.RC2=1;
+        __delay_ms(5);
+        
+        PORTC=0;
+        PORTD=min;
+        PORTCbits.RC7=1;
+        __delay_ms(5);
+    }
+    return;
+
+}
+void __interrupt()temp(){
+    if(INTCONbits.TMR0IF==1){
+        deseg++;
+       if(deseg==59){
+          seg++;
+          deseg=0;    
+       } 
+        if(seg==59){
+            min++;
+            seg=0;
+        }
+        TMR0=65496;
+    }
+    
+    INTCONbits.TMR0IF=0;
+}
